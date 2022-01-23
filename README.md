@@ -1,0 +1,2 @@
+# ListCustom
+採用MFC的CListCtrl類別來將資料做列表的呈現，且列表可進行列表內容的修改
