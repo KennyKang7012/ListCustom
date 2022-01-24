@@ -36,5 +36,9 @@ public:
 	CEditListCtrl m_list;
 	afx_msg void OnLvnEndlabeleditList1(NMHDR *pNMHDR, LRESULT *pResult);
 
+	void CreateListMemory(void);
+	void FreeListMemory(void);
+	void SetListData(void);
+	void Print3DList(void);
 	void CreateListCtrl(int nCol, int nRow);
 };

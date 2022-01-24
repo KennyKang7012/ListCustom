@@ -71,13 +71,23 @@ END_MESSAGE_MAP()
 
 
 // CListCustomDlg 訊息處理常式
-#define COL 4
-#define ROW 3
+#define ROW		3
+#define COL		4
+#define STRLEN	64
+
 int LIST_HEADER_SIZE[COL] = { 55, 60, 60, 120 };
-wchar_t *LIST_HEADER[COL] = { _T("名字"), _T("身高"), _T("體重"), _T("測量時間") };
-wchar_t *LIST_ITEM[ROW][COL] = { { _T("張三"), _T("182cm"), _T("81kg"), _T("2022/01/20") },
-							     { _T("李四"), _T("175cm"), _T("75kg"), _T("2022/01/21") },
-							     { _T("王五"), _T("191cm"), _T("90kg"), _T("2022/01/22") }, };
+wchar_t *LIST_HEADER[] = { _T("名字"), _T("身高"), _T("體重"), _T("測量時間") };
+//wchar_t *LIST_ITEM[ROW][COL] = { { _T("張三"), _T("182cm"), _T("81kg"), _T("2022/01/20") },
+//							       { _T("李四"), _T("175cm"), _T("75kg"), _T("2022/01/21") },
+//							       { _T("王五"), _T("191cm"), _T("90kg"), _T("2022/01/22") }, };
+
+wchar_t LIST_ITEM_3D[ROW][COL][STRLEN] = {
+										 { {(L"張三")}, {L"182cm"}, {L"81kg"}, {L"2022/01/20"} },
+										 { {(L"李四")}, {L"175cm"}, {L"75kg"}, {L"2022/01/21"} },
+										 { {(L"王五")}, {L"191cm"}, {L"90kg"}, {L"2022/01/22"} },
+									 };
+
+wchar_t *LIST_ITEM[ROW][COL] = { 0 };
 
 typedef struct _LIST_ITEM_TEXT {
 	LPCTSTR NameText;
@@ -133,8 +143,16 @@ BOOL CListCustomDlg::OnInitDialog()
 		TRACE(L"Weight is %s\r\n", g_ListItemText[i].WeightText);
 		TRACE(L"DataTime is %s\r\n", g_ListItemText[i].DataTimeText);
 	}
-	
+
+	CreateListMemory();
+
+	SetListData();
+
 	CreateListCtrl(COL, ROW);
+
+	FreeListMemory();
+
+	Print3DList();
 
 #if 0
 	m_list.InsertColumn(0, _T("名字"), LVCFMT_LEFT, 55);
@@ -222,6 +240,68 @@ void CListCustomDlg::OnLvnEndlabeleditList1(NMHDR *pNMHDR, LRESULT *pResult)
 	*pResult = TRUE;
 }
 
+void CListCustomDlg::CreateListMemory(void)
+{
+	for (int j = 0; j < ROW; j++)
+	{
+		for (int i = 0; i < COL; i++)
+		{
+			if (LIST_ITEM[j][i] == NULL)
+			{
+				LIST_ITEM[j][i] = (wchar_t *)malloc(sizeof(wchar_t) * STRLEN);
+				wmemset(LIST_ITEM[j][i], 0, STRLEN);
+				TRACE(L"LIST_ITEM[%d][%d] = %ls\n", j, i, LIST_ITEM[j][i]);
+			}
+		}
+	}
+}
+
+void CListCustomDlg::FreeListMemory(void)
+{
+	for (int j = 0; j < ROW; j++)
+	{
+		for (int i = 0; i < COL; i++)
+		{
+			if (LIST_ITEM[j][i] != NULL)
+			{
+				TRACE(L"LIST_ITEM[%d][%d] = Not NULL\n", j, i);
+				free(LIST_ITEM[j][i]);
+				LIST_ITEM[j][i] = NULL;
+			}
+		}
+	}
+}
+
+void CListCustomDlg::SetListData(void)
+{
+	int Idx = 0;
+	
+	for (int j = 0; j < ROW; j++)
+	{
+		wcscpy(LIST_ITEM[j][0], g_ListItemText[j].NameText);
+		wcscpy(LIST_ITEM[j][1], g_ListItemText[j].HeightText);
+		wcscpy(LIST_ITEM[j][2], g_ListItemText[j].WeightText);
+		wcscpy(LIST_ITEM[j][3], g_ListItemText[j].DataTimeText);
+		for (int i = 0; i < COL; i++)
+		{
+			Idx = j * COL + i;
+			TRACE(L"(%d, %d) = %d ==> LIST_ITEM[%d][%d] = %ws\n", j, i, Idx, j, i, LIST_ITEM[j][i]);
+		}
+	}
+}
+
+void CListCustomDlg::Print3DList(void)
+{
+	int Idx = 0;
+	for (int j = 0; j < ROW; j++)
+	{
+		for (int i = 0; i < COL; i++)
+		{
+			TRACE(L"LIST_ITEM_3D[%d][%d] = %ws\r\n", j, i, LIST_ITEM_3D[j][i]);
+		}
+	}
+}
+
 void CListCustomDlg::CreateListCtrl(int nCol, int nRow)
 {
 	//Header
@@ -233,7 +313,7 @@ void CListCustomDlg::CreateListCtrl(int nCol, int nRow)
 	for (int j = 0; j < nRow; j++)
 	{
 		nItem = m_list.InsertItem(j, LIST_ITEM[j][0]);
-		TRACE("nItem = %d\r\n", nItem);
+		TRACE(L"nItem = %d\r\n", nItem);
 		for (int i = 1; i < nCol; i++)
 		{
 			m_list.SetItemText(nItem, i, LIST_ITEM[j][i]);
